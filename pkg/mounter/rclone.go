@@ -15,6 +15,7 @@ type rcloneMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	roleArn         string
 }
 
 const (
@@ -28,6 +29,7 @@ func newRcloneMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		roleArn:         cfg.AwsRoleArn,
 	}, nil
 }
 
@@ -47,7 +49,11 @@ func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 		args = append(args, fmt.Sprintf("--s3-region=%s", rclone.region))
 	}
 	args = append(args, rclone.meta.MountOptions...)
-	os.Setenv("AWS_ACCESS_KEY_ID", rclone.accessKeyID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", rclone.secretAccessKey)
+
+	creds := getCredentials(rclone.region, rclone.accessKeyID, rclone.secretAccessKey, rclone.roleArn)
+	for k, v := range creds {
+		os.Setenv(k, v)
+	}
+
 	return fuseMount(target, rcloneCmd, args)
 }

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	geesefsCmd    = "geesefs"
+	geesefsCmd = "geesefs"
 )
 
 // Implements Mounter
@@ -23,6 +23,7 @@ type geesefsMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	roleArn         string
 }
 
 func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
@@ -32,6 +33,7 @@ func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		roleArn:         cfg.AwsRoleArn,
 	}, nil
 }
 
@@ -74,8 +76,12 @@ func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 		"-o", "allow_other",
 		"--log-file", "/dev/stderr",
 	}, args...)
-	os.Setenv("AWS_ACCESS_KEY_ID", geesefs.accessKeyID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", geesefs.secretAccessKey)
+
+	creds := getCredentials(geesefs.region, geesefs.accessKeyID, geesefs.secretAccessKey, geesefs.roleArn)
+	for k, v := range creds {
+		os.Setenv(k, v)
+	}
+
 	return fuseMount(target, geesefsCmd, args)
 }
 
@@ -117,20 +123,27 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
-	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
-	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
+
+	creds := getCredentials(geesefs.region, geesefs.accessKeyID, geesefs.secretAccessKey, geesefs.roleArn)
+	var env []string
+	for k, v := range creds {
+		env = append(env, k+"="+v)
+	}
+
 	newProps := []systemd.Property{
 		systemd.Property{
-			Name: "Description",
-			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
+			Name:  "Description",
+			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume " + volumeID),
 		},
 		systemd.PropExecStart(args, false),
 		systemd.Property{
-			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
+			Name:  "Environment",
+			Value: dbus.MakeVariant(env),
 		},
 		systemd.Property{
-			Name: "CollectMode",
+			Name:  "CollectMode",
 			Value: dbus.MakeVariant("inactive-or-failed"),
 		},
 	}
@@ -150,7 +163,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			if curPath != target {
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
-					" in a different directory. We want %v, but it's in %v",
+						" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}

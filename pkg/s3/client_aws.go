@@ -5,12 +5,10 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/golang/glog"
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter/awsconfig"
 )
 
 type s3ClientAws struct {
@@ -20,7 +18,7 @@ type s3ClientAws struct {
 
 func NewClientAws(cfg *Config) (*s3ClientAws, error) {
 
-	awsConf := awsConfig(cfg.Region, cfg.AwsRoleArn, "k8s-csi-s3")
+	awsConf := awsconfig.AwsConfig(cfg.Region, cfg.AwsRoleArn, "k8s-csi-s3")
 
 	client := &s3ClientAws{
 		config:      cfg,
@@ -117,52 +115,4 @@ func (client *s3ClientAws) removeObjects(bucketName string, objectKeys []string)
 	}
 	_, err := client.awsS3Client.DeleteObjects(context.TODO(), &input)
 	return err
-}
-
-func awsConfig(region, roleArn, roleSessionName string) aws.Config {
-	const me = "awsConfig"
-
-	cfg, errConfig := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(region))
-	if errConfig != nil {
-		glog.Fatalf("%s: load config: %v", me, errConfig)
-	}
-
-	if roleArn != "" {
-		//
-		// AssumeRole
-		//
-		glog.Infof("%s: AssumeRole: arn: %s", me, roleArn)
-		clientSts := sts.NewFromConfig(cfg)
-		cfg2, errConfig2 := config.LoadDefaultConfig(
-			context.TODO(), config.WithRegion(region),
-			config.WithCredentialsProvider(aws.NewCredentialsCache(
-				stscreds.NewAssumeRoleProvider(
-					clientSts,
-					roleArn,
-					func(o *stscreds.AssumeRoleOptions) {
-						o.RoleSessionName = roleSessionName
-					},
-				)),
-			),
-		)
-		if errConfig2 != nil {
-			glog.Fatalf("%s: AssumeRole %s: error: %v", me, roleArn, errConfig2)
-		}
-		cfg = cfg2
-	}
-
-	{
-		// show caller identity
-		clientSts := sts.NewFromConfig(cfg)
-		input := sts.GetCallerIdentityInput{}
-		respSts, errSts := clientSts.GetCallerIdentity(context.TODO(), &input)
-		if errSts != nil {
-			glog.Errorf("%s: GetCallerIdentity: error: %v", me, errSts)
-		} else {
-			glog.Infof("%s: GetCallerIdentity: Account=%s ARN=%s UserId=%s", me, *respSts.Account, *respSts.Arn, *respSts.UserId)
-		}
-	}
-
-	return cfg
 }
