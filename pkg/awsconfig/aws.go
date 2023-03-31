@@ -10,6 +10,9 @@ import (
 	"github.com/golang/glog"
 )
 
+// AwsConfig provides a configuration to initialize services.
+// If roleArn is provided, it assumes the role.
+// Otherwise it works with default credentials.
 func AwsConfig(region, roleArn, roleSessionName string) aws.Config {
 	const me = "awsConfig"
 

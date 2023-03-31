@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/golang/glog"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter/awsconfig"
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/awsconfig"
 )
 
 type s3ClientAws struct {

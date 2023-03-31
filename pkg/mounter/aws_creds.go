@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/golang/glog"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter/awsconfig"
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/awsconfig"
 )
 
+// getCredentials creates a map with credentials as env vars.
+// If accessKeyID is provided, the map will contain static credentials.
+// Otherwise the fuction will retrieve credentials from the roleArn.
 func getCredentials(region, accessKeyID, secretAccessKey, roleArn string) map[string]string {
 
 	if accessKeyID != "" {
