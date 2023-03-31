@@ -3,9 +3,14 @@ module github.com/yandex-cloud/k8s-csi-s3
 go 1.15
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.17.7
+	github.com/aws/aws-sdk-go-v2/config v1.18.19
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.18
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.18.7
 	github.com/container-storage-interface/spec v1.1.0
-	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
-	github.com/godbus/dbus/v5 v5.0.4 // indirect
+	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/godbus/dbus/v5 v5.0.4
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.1.0 // indirect
 	github.com/kubernetes-csi/csi-lib-utils v0.6.1 // indirect
