@@ -49,11 +49,7 @@ func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 		args = append(args, fmt.Sprintf("--s3-region=%s", rclone.region))
 	}
 	args = append(args, rclone.meta.MountOptions...)
-
-	creds := getCredentials(rclone.region, rclone.accessKeyID, rclone.secretAccessKey, rclone.roleArn)
-	for k, v := range creds {
-		os.Setenv(k, v)
-	}
-
+	os.Setenv("AWS_ACCESS_KEY_ID", rclone.accessKeyID)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", rclone.secretAccessKey)
 	return fuseMount(target, rcloneCmd, args)
 }

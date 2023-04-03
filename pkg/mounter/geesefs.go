@@ -76,12 +76,8 @@ func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 		"-o", "allow_other",
 		"--log-file", "/dev/stderr",
 	}, args...)
-
-	creds := getCredentials(geesefs.region, geesefs.accessKeyID, geesefs.secretAccessKey, geesefs.roleArn)
-	for k, v := range creds {
-		os.Setenv(k, v)
-	}
-
+	os.Setenv("AWS_ACCESS_KEY_ID", geesefs.accessKeyID)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", geesefs.secretAccessKey)
 	return fuseMount(target, geesefsCmd, args)
 }
 
@@ -125,13 +121,6 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	}
 	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
 	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
-
-	creds := getCredentials(geesefs.region, geesefs.accessKeyID, geesefs.secretAccessKey, geesefs.roleArn)
-	var env []string
-	for k, v := range creds {
-		env = append(env, k+"="+v)
-	}
-
 	newProps := []systemd.Property{
 		systemd.Property{
 			Name:  "Description",
@@ -140,7 +129,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		systemd.PropExecStart(args, false),
 		systemd.Property{
 			Name:  "Environment",
-			Value: dbus.MakeVariant(env),
+			Value: dbus.MakeVariant([]string{"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey}),
 		},
 		systemd.Property{
 			Name:  "CollectMode",
