@@ -4,10 +4,7 @@ go 1.15
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.17.7
-	github.com/aws/aws-sdk-go-v2/config v1.18.19
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.18
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.18.7
 	github.com/container-storage-interface/spec v1.1.0
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/godbus/dbus/v5 v5.0.4
@@ -21,6 +18,7 @@ require (
 	github.com/onsi/ginkgo v1.5.0
 	github.com/onsi/gomega v1.4.0
 	github.com/spf13/afero v1.2.1 // indirect
+	github.com/udhos/boilerplate v0.0.1
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect

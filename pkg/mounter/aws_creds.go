@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/golang/glog"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/awsconfig"
+	"github.com/udhos/boilerplate/awsconfig"
 )
 
 // getCredentials creates a map with credentials as env vars.
@@ -26,7 +26,18 @@ func getCredentials(region, accessKeyID, secretAccessKey, roleArn string) map[st
 	// otherwise we will try role credentials
 	//
 
-	awsConf := awsconfig.AwsConfig(region, roleArn, "k8s-csi-s3")
+	awsConfOptions := awsconfig.Options{
+		Region:          region,
+		RoleArn:         roleArn,
+		RoleSessionName: "k8s-csi-s3 s3driver",
+		Printf:          glog.Infof,
+	}
+
+	awsConf, errAwsConf := awsconfig.AwsConfig(awsConfOptions)
+	if errAwsConf != nil {
+		glog.Errorf("getCredentials: error aws config: %v", errAwsConf)
+		return map[string]string{}
+	}
 
 	creds, err := awsConf.Credentials.Retrieve(context.TODO())
 	if err != nil {

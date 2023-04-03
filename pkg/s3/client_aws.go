@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/golang/glog"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/awsconfig"
+	"github.com/udhos/boilerplate/awsconfig"
 )
 
 type s3ClientAws struct {
@@ -18,7 +18,17 @@ type s3ClientAws struct {
 
 func NewClientAws(cfg *Config) (*s3ClientAws, error) {
 
-	awsConf := awsconfig.AwsConfig(cfg.Region, cfg.AwsRoleArn, "k8s-csi-s3")
+	awsConfOptions := awsconfig.Options{
+		Region:          cfg.Region,
+		RoleArn:         cfg.AwsRoleArn,
+		RoleSessionName: "k8s-csi-s3 s3driver",
+		Printf:          glog.Infof,
+	}
+
+	awsConf, errAwsConf := awsconfig.AwsConfig(awsConfOptions)
+	if errAwsConf != nil {
+		return nil, errAwsConf
+	}
 
 	client := &s3ClientAws{
 		config:      cfg,
