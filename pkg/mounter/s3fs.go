@@ -13,6 +13,7 @@ type s3fsMounter struct {
 	url           string
 	region        string
 	pwFileContent string
+	roleArn       string
 }
 
 const (
@@ -25,12 +26,16 @@ func newS3fsMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		url:           cfg.Endpoint,
 		region:        cfg.Region,
 		pwFileContent: cfg.AccessKeyID + ":" + cfg.SecretAccessKey,
+		roleArn:       cfg.AwsRoleArn,
 	}, nil
 }
 
 func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
-	if err := writes3fsPass(s3fs.pwFileContent); err != nil {
-		return err
+	useRole := s3fs.pwFileContent[0] == ':' // access key ID is empty
+	if !useRole {
+		if err := writes3fsPass(s3fs.pwFileContent); err != nil {
+			return err
+		}
 	}
 	args := []string{
 		fmt.Sprintf("%s:/%s", s3fs.meta.BucketName, s3fs.meta.Prefix),
@@ -42,6 +47,9 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 	}
 	if s3fs.region != "" {
 		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
+	}
+	if useRole {
+		args = append(args, "-o", fmt.Sprintf("iam_role=%s", s3fs.roleArn))
 	}
 	args = append(args, s3fs.meta.MountOptions...)
 	return fuseMount(target, s3fsCmd, args)
