@@ -37,19 +37,21 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 			return err
 		}
 	}
+	// s3fs mybucket /path/to/mountpoint -o passwd_file=${HOME}/.passwd-s3fs
 	args := []string{
 		fmt.Sprintf("%s:/%s", s3fs.meta.BucketName, s3fs.meta.Prefix),
 		target,
-		"-o", "use_path_request_style",
-		"-o", fmt.Sprintf("url=%s", s3fs.url),
 		"-o", "allow_other",
 		"-o", "mp_umask=000",
 	}
-	if s3fs.region != "" {
-		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
-	}
 	if useRole {
 		args = append(args, "-o", fmt.Sprintf("iam_role=%s", s3fs.roleArn))
+	} else {
+		args = append(args, "-o", "use_path_request_style")
+		args = append(args, "-o", fmt.Sprintf("url=%s", s3fs.url))
+		if s3fs.region != "" {
+			args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
+		}
 	}
 	args = append(args, s3fs.meta.MountOptions...)
 	return fuseMount(target, s3fsCmd, args)
