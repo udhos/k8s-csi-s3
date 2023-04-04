@@ -11,7 +11,7 @@ RUN go mod tidy
 RUN go env -w CGO_ENABLED=0
 RUN go build -o ./s3driver ./cmd/s3driver
 
-FROM alpine:3.37.3 as s3fsbuild
+FROM alpine:3.17.3 as s3fsbuild
 WORKDIR /build
 RUN apk update
 RUN apk add git build-base automake autoconf libxml2-dev fuse-dev curl-dev
