@@ -21,7 +21,7 @@ func NewClientAws(cfg *Config) (*s3ClientAws, error) {
 	awsConfOptions := awsconfig.Options{
 		Region:          cfg.Region,
 		RoleArn:         cfg.AwsRoleArn,
-		RoleSessionName: "k8s-csi-s3 s3driver",
+		RoleSessionName: "k8s-csi-s3driver",
 		Printf:          glog.Infof,
 	}
 
