@@ -32,7 +32,7 @@ func NewClientAws(cfg *Config) (*s3ClientAws, error) {
 
 	client := &s3ClientAws{
 		config:      cfg,
-		awsS3Client: s3.NewFromConfig(awsConf),
+		awsS3Client: s3.NewFromConfig(awsConf.AwsConfig),
 	}
 
 	return client, nil

@@ -18,7 +18,7 @@ require (
 	github.com/onsi/ginkgo v1.5.0
 	github.com/onsi/gomega v1.4.0
 	github.com/spf13/afero v1.2.1 // indirect
-	github.com/udhos/boilerplate v0.0.1
+	github.com/udhos/boilerplate v0.2.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
