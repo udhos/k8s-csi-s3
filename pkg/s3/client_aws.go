@@ -76,14 +76,18 @@ func (client *s3ClientAws) CreatePrefix(bucketName string, prefix string) error 
 
 func (client *s3ClientAws) RemovePrefix(bucketName string, prefix string) error {
 	errObj := client.removeObjectsFromPrefix(bucketName, prefix)
-	glog.Errorf("RemovePrefix: removeObjectsFromPrefix: %v", errObj)
+	if errObj != nil {
+		glog.Errorf("RemovePrefix: removeObjectsFromPrefix: %v", errObj)
+	}
 
 	return client.removeObjects(bucketName, []string{prefix})
 }
 
 func (client *s3ClientAws) RemoveBucket(bucketName string) error {
 	errObj := client.removeObjectsFromPrefix(bucketName, "")
-	glog.Errorf("RemoveBucket: removeObjectsFromPrefix: %v", errObj)
+	if errObj != nil {
+		glog.Errorf("RemoveBucket: removeObjectsFromPrefix: %v", errObj)
+	}
 
 	input := s3.DeleteBucketInput{Bucket: aws.String(bucketName)}
 	_, err := client.awsS3Client.DeleteBucket(context.TODO(), &input)
