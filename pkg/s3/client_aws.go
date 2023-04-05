@@ -77,7 +77,8 @@ func (client *s3ClientAws) CreatePrefix(bucketName string, prefix string) error 
 func (client *s3ClientAws) RemovePrefix(bucketName string, prefix string) error {
 	errObj := client.removeObjectsFromPrefix(bucketName, prefix)
 	if errObj != nil {
-		glog.Errorf("RemovePrefix: removeObjectsFromPrefix: %v", errObj)
+		glog.Errorf("RemovePrefix: removeObjectsFromPrefix: bucket='%s' prefix='%s' %v",
+			bucketName, prefix, errObj)
 	}
 
 	return client.removeObjects(bucketName, []string{prefix})
@@ -86,7 +87,8 @@ func (client *s3ClientAws) RemovePrefix(bucketName string, prefix string) error 
 func (client *s3ClientAws) RemoveBucket(bucketName string) error {
 	errObj := client.removeObjectsFromPrefix(bucketName, "")
 	if errObj != nil {
-		glog.Errorf("RemoveBucket: removeObjectsFromPrefix: %v", errObj)
+		glog.Errorf("RemoveBucket: removeObjectsFromPrefix: bucket='%s' %v",
+			bucketName, errObj)
 	}
 
 	input := s3.DeleteBucketInput{Bucket: aws.String(bucketName)}
@@ -107,8 +109,14 @@ func (client *s3ClientAws) removeObjectsFromPrefix(bucketName string, prefix str
 		return errList
 	}
 
+	count := len(result.Contents)
+
 	glog.Infof("removeObjectsFromPrefix: bucket='%s' prefix='%s': found %d keys",
-		bucketName, prefix, len(result.Contents))
+		bucketName, prefix, count)
+
+	if count < 1 {
+		return nil
+	}
 
 	var keys []string
 	for _, o := range result.Contents {
@@ -118,9 +126,9 @@ func (client *s3ClientAws) removeObjectsFromPrefix(bucketName string, prefix str
 	return client.removeObjects(bucketName, keys)
 }
 
-func (client *s3ClientAws) removeObjects(bucketName string, objectKeys []string) error {
+func (client *s3ClientAws) removeObjects(bucketName string, keys []string) error {
 	var objectIds []types.ObjectIdentifier
-	for _, key := range objectKeys {
+	for _, key := range keys {
 		objectIds = append(objectIds, types.ObjectIdentifier{Key: aws.String(key)})
 	}
 	input := s3.DeleteObjectsInput{
